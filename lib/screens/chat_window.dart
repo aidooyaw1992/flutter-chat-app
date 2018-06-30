@@ -9,12 +9,29 @@ class ChatScreen extends StatefulWidget {
 }
 
 class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
+  WebSocketChannel channel;
+
   final List<ChatMessage> _messages = <ChatMessage>[];
-  final TextEditingController _textController = new TextEditingController();
+  TextEditingController _textController;
   bool _isComposing = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController();
+    channel = IOWebSocketChannel.connect('ws://echo.websocket.org');
+    channel.stream.listen((message) => setState(() => _messages.add(message)));
+  }
+
   void _handleSubmitted(String text) {
-    _textController.clear();
+
+
+    if (_textController.text.isNotEmpty) {
+      channel.sink.add(_textController.text);
+      _textController.clear();
+      print('hello');
+    }
+
     setState(() {
       _isComposing = false;
     });
@@ -30,6 +47,14 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     });
     message.animationController.forward();
   }
+
+//  void sendMessage() {
+//    if (_textController.text.isNotEmpty) {
+//      channel.sink.add(_textController.text);
+//      _textController.text = "";
+//      print('hell');
+//    }
+//  }
 
   void dispose() {
     for (ChatMessage message in _messages)
